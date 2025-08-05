@@ -120,11 +120,20 @@ class StateModel:
             try:
                 job = JobState.objects.get(id=msg.job_id)
                 if job.location.name == msg.location.name:
-                    print(
-                        "Job already scanned to location at {0}, ignoring new scan at {1}".format(
-                            job.timestamp, msg.timestamp
-                        )
-                    )
+                    #print(
+                    #    "Job already scanned to location at {0}, ignoring new scan at {1}".format(
+                    #        job.timestamp, msg.timestamp
+                    #    )
+                    #)
+                    if job.location.post_hold:
+                        old_location=job.location.name
+                        hold_loc=job.location.post_hold
+                        job.location=hold_loc
+                        job.timestamp=msg.timestamp
+                    else:
+                        # no post hold.... still generate the exit event....
+                        old_location=job.location.name
+                        job.location="Completed"
                 else:
                     old_location = job.location.name
                     job.location = msg.location
