@@ -2,3 +2,8 @@
 **__pycache__
 !**/.gitkeep
 **/django_secret_key
+barcode_dc/config/config_1.toml
+barcode_dc/config/config_1.toml
+barcode_dc/config/config_2.toml
+barcode_dc/config/config_3.toml
+barcode_dc/config/config_4.toml

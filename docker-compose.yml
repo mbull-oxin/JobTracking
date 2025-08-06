@@ -142,7 +142,7 @@ services:
                     tag: docker-timeseries-db
             restart: unless-stopped
             depends_on:
-                - "mqtt_broker"
+                - "mqtt-broker"
         timeseries-db-input:
             extends:
                 file: timeseries_sds/app.yml
@@ -158,7 +158,7 @@ services:
             restart: unless-stopped
             depends_on:
                 - "timeseries-db"
-                - "mqtt_broker"
+                - "mqtt-broker"
 
 
 networks:
