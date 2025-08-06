@@ -119,7 +119,10 @@ class StateModel:
             # determine new state
             try:
                 job = JobState.objects.get(id=msg.job_id)
-                if job.location.name == msg.location.name:
+                if JobState.objects.count(location=msg.location):
+                    self.zmq_out.send_json({"topic": "state/update/error", "payload": {'id':job.id}})
+                last_ts=job.timestamp
+                if job.location.name == msg.location:
                     #print(
                     #    "Job already scanned to location at {0}, ignoring new scan at {1}".format(
                     #        job.timestamp, msg.timestamp
@@ -133,11 +136,19 @@ class StateModel:
                     else:
                         # no post hold.... still generate the exit event....
                         old_location=job.location.name
-                        job.location="Completed"
+                        job.location="Completed" #TODO: is this the correct version for completing the job after a set time??
                 else:
                     old_location = job.location.name
                     job.location = msg.location
                     job.timestamp = msg.timestamp
+                if last_ts and old_location and msg.timestamp>=last_ts:
+                    cycle_msg={
+                        'job_id':msg.job_id,
+                        'state':'complete',
+                        'cycle_time':msg.timestamp-last_ts,
+                        'location':old_location,
+                    }
+                    self.zmq_out.send_json({'topic':'timing/cycletime','payload':cycle_msg})
             except JobState.DoesNotExist:
                 job = JobState(
                     id=msg.job_id, location=msg.location, timestamp=msg.timestamp
