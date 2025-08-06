@@ -17,54 +17,6 @@ services:
             environment:
                 - USER_CONFIG_FILE=./config/config_1.toml
        
-        barcode-2:
-            extends:
-                file: barcode_dc/app.yml
-                service: app
-            networks:
-                internal:
-                    aliases:
-                        - bs2.docker.local
-            logging:
-                driver: syslog
-                options:
-                    tag: docker-barcode-2
-            restart: unless-stopped
-            environment:
-                - USER_CONFIG_FILE=./config/config_2.toml
-
-        barcode-3:
-            extends:
-                file: barcode_dc/app.yml
-                service: app
-            networks:
-                internal:
-                    aliases:
-                        - bs3.docker.local
-            logging:
-                driver: syslog
-                options:
-                    tag: docker-barcode-3
-            restart: unless-stopped
-            environment:
-                - USER_CONFIG_FILE=./config/config_3.toml
-
-        barcode-4:
-            extends:
-                file: barcode_dc/app.yml
-                service: app
-            networks:
-                internal:
-                    aliases:
-                        - bs4.docker.local
-            logging:
-                driver: syslog
-                options:
-                    tag: docker-barcode-4
-            restart: unless-stopped
-            environment:
-                - USER_CONFIG_FILE=./config/config_4.toml
-
         dashboard-ui:
             extends:
                 file: dashboard_ui/app.yml

@@ -1,0 +1,14 @@
+version: '2'
+
+services:
+        app:
+            build: .
+            privileged: true
+            working_dir: /app
+            command: ["python","main.py","--log","info"]
+            devices:
+                - /dev/i2c:/dev/i2c:rw
+            volumes:
+                - ./config:/app/config:ro
+                - /etc/localtime:/etc/localtime:ro
+                - /run/udev:/run/udev:ro
