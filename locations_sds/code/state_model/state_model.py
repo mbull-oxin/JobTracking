@@ -15,7 +15,7 @@ class Msg:
         # if not exists:
         #    raise ValueError("unknown location: {}".format(self.location))
         self.event_type = msg_dict.get("mode", "I")
-        self.timestamp = msg_dict["timestamp"]
+        self.timestamp = datetime.fromisoformat(msg_dict["timestamp"])
 
     def __str__(self):
         return f"{super().__str__()}:{self.job_id},{self.location.name},{self.event_type},{self.timestamp}"
@@ -99,6 +99,7 @@ class StateModel:
             print(e.msg)
 
     def handle_scan(self, raw_msg):
+        # TODO: bug with rescan getting caught by two job filter...
         print(raw_msg)
         # listen for incoming events
         try:
@@ -117,43 +118,47 @@ class StateModel:
 
             old_location = None
             # determine new state
+            print('curr_objects ===>>>',JobState.objects.filter(location__exact=msg.location))
             try:
                 job = JobState.objects.get(id=msg.job_id)
-                if JobState.objects.count(location=msg.location):
-                    self.zmq_out.send_json({"topic": "state/update/error", "payload": {'id':job.id}})
-                last_ts=job.timestamp
-                if job.location.name == msg.location:
-                    #print(
-                    #    "Job already scanned to location at {0}, ignoring new scan at {1}".format(
-                    #        job.timestamp, msg.timestamp
-                    #    )
-                    #)
-                    if job.location.post_hold:
-                        old_location=job.location.name
-                        hold_loc=job.location.post_hold
-                        job.location=hold_loc
-                        job.timestamp=msg.timestamp
-                    else:
-                        # no post hold.... still generate the exit event....
-                        old_location=job.location.name
-                        job.location="Completed" #TODO: is this the correct version for completing the job after a set time??
-                else:
-                    old_location = job.location.name
-                    job.location = msg.location
-                    job.timestamp = msg.timestamp
-                if last_ts and old_location and msg.timestamp>=last_ts:
-                    cycle_msg={
-                        'job_id':msg.job_id,
-                        'state':'complete',
-                        'cycle_time':msg.timestamp-last_ts,
-                        'location':old_location,
-                    }
-                    self.zmq_out.send_json({'topic':'timing/cycletime','payload':cycle_msg})
             except JobState.DoesNotExist:
-                job = JobState(
-                    id=msg.job_id, location=msg.location, timestamp=msg.timestamp
-                )
-            print(job)
+                job = JobState(id=msg.job_id, location=msg.location, timestamp=msg.timestamp)
+            print('===>>>',job.location.name,msg.location)
+            last_ts=job.timestamp
+            if job.location == msg.location:
+                #print(
+                #    "Job already scanned to location at {0}, ignoring new scan at {1}".format(
+                #        job.timestamp, msg.timestamp
+                #    )
+                #)
+                print('transfer job===>>>',job.location.post_hold)
+                if job.location.post_hold:
+                    old_location=job.location
+                    hold_loc=job.location.post_hold
+                    job.location=hold_loc
+                    job.timestamp=msg.timestamp
+                else:
+                    # no post hold.... still generate the exit event....
+                    old_location=job.location
+                    job.location=Location.objects.get(name="Complete")
+            elif len(JobState.objects.filter(location__exact=msg.location))>0:
+                self.zmq_out.send_json({"topic": "state/update/error", "payload": {'id':msg.job_id,'state':'error','location':msg.location.name}})
+                return
+            else:
+                old_location = job.location
+                job.location = msg.location
+                job.timestamp = msg.timestamp
+            print('===>>>',type(msg.timestamp),type(job.timestamp),type(last_ts))
+            if last_ts and old_location and msg.timestamp>=last_ts:
+                c_td=msg.timestamp-last_ts
+                cycle_msg={
+                    'job_id':msg.job_id,
+                    'state':'complete',
+                    'cycle_time':c_td.seconds,
+                    'location':old_location.name,
+                }
+                self.zmq_out.send_json({'topic':'timing/cycletime','payload':cycle_msg})
+            print('saving ->',job)
             job.save()
 
             # send update event
@@ -177,7 +182,7 @@ class StateModel:
                 exit_msg = {
                     "id": job.id,
                     "state": "exited",
-                    "location": old_location,
+                    "location": old_location.name,
                     "timestamp": (
                         job.timestamp.isoformat()
                         if isinstance(job.timestamp, datetime)
