@@ -122,8 +122,14 @@ class StateModel:
             try:
                 job = JobState.objects.get(id=msg.job_id)
             except JobState.DoesNotExist:
+<<<<<<< HEAD
                 job = JobState(id=msg.job_id, location=Location.objects.get(name="New"), timestamp=msg.timestamp)
             print('===>>>',job.location.name,job.timestamp)
+=======
+                # TODO: this trips up on initial scan as it immmediately transfers to post hold.....
+                job = JobState(id=msg.job_id, location=msg.location, timestamp=msg.timestamp)
+            print('===>>>',job.location.name,msg.location)
+>>>>>>> e72b78e (Update state_model.py)
             last_ts=job.timestamp
             if job.location == msg.location:
                 #print(
