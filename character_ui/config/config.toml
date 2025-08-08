@@ -1,3 +1,8 @@
+[connection]
+addr='mqtt.docker.local'
+port=1883
+location='Station 1'
 [display]
-addr=''
-location='test'
+type='WS1602RGB'
+
+

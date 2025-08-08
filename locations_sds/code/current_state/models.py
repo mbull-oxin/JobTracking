@@ -7,7 +7,7 @@ class SimpleModel(models.Model):
 
 class Location(SimpleModel,SortableMixin):
     name = models.CharField(max_length=60)
-    post_hold = models.ForeignObject('self',on_delete=models.CASCADE)
+    post_hold = models.ForeignKey('self',on_delete=models.SET_NULL,null=True,blank=True)
     class Meta:
         verbose_name_plural = 'Locations'
         ordering = ['order']

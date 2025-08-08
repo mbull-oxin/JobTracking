@@ -138,11 +138,11 @@ class StateModel:
                     job.location=hold_loc
                     job.timestamp=msg.timestamp
                 else:
-                    # no post hold.... still generate the exit event....
+                    # no post hold.... still generate the exit event.... but redirect to Complete
                     old_location=job.location
                     job.location=Location.objects.get(name="Complete")
             elif len(JobState.objects.filter(location__exact=msg.location))>0:
-                self.zmq_out.send_json({"topic": "state/update/error", "payload": {'id':msg.job_id,'state':'error','location':msg.location.name}})
+                self.zmq_out.send_json({"topic": "state/update/error", "payload": {'id':msg.job_id,'state':'error','location':msg.location.name,'message':'scan out first','timestamp':datetime.now().isoformat()}})
                 return
             else:
                 old_location = job.location

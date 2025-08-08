@@ -1,12 +1,12 @@
 [input.scanner]
-serial="0581_011c"
-connection_point=["0","1.3.1"]
+serial="0483_0011"
+connection_point=["0","1.4"]
 platform = "fd500000.pcie-pci-0000:01:00.0"
 
 [[variable]]
     name="location"
     type="static"
-    value="Location 1"
+    value="Station 1"
 
 [[variable]]
     name="id"

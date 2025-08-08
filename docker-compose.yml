@@ -17,6 +17,20 @@ services:
             environment:
                 - USER_CONFIG_FILE=./config/config_1.toml
        
+        character-ui:
+            extends:
+                file: character_ui/app.yml
+                service: app
+            networks:
+                internal:
+                    aliases:
+                        - local-ui.docker.local
+            logging:
+                driver: syslog
+                options:
+                    tag: docker-local-ui
+            restart: unless-stopped
+
         dashboard-ui:
             extends:
                 file: dashboard_ui/app.yml
@@ -80,6 +94,7 @@ services:
                     options:
                             tag: docker-mqtt
             restart: unless-stopped
+
         timeseries-db:
             extends:
                 file: timeseries_sds/app.yml
