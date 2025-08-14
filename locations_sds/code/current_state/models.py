@@ -12,7 +12,7 @@ class Location(SimpleModel,SortableMixin):
         verbose_name_plural = 'Locations'
         ordering = ['order']
 
-    order = models.PositiveIntegerField(default=0, editable=False)
+    order = models.PositiveIntegerField(default=0, editable=True)
     
     def __str__(self):
         return self.name

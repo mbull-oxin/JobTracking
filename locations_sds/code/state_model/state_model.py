@@ -122,8 +122,8 @@ class StateModel:
             try:
                 job = JobState.objects.get(id=msg.job_id)
             except JobState.DoesNotExist:
-                job = JobState(id=msg.job_id, location=msg.location, timestamp=msg.timestamp)
-            print('===>>>',job.location.name,msg.location)
+                job = JobState(id=msg.job_id, location=Location.objects.get(name="New"), timestamp=msg.timestamp)
+            print('===>>>',job.location.name,job.timestamp)
             last_ts=job.timestamp
             if job.location == msg.location:
                 #print(
@@ -138,9 +138,11 @@ class StateModel:
                     job.location=hold_loc
                     job.timestamp=msg.timestamp
                 else:
-                    # no post hold.... still generate the exit event.... but redirect to Complete
-                    old_location=job.location
-                    job.location=Location.objects.get(name="Complete")
+                    # no post hold.... do nothing this is a conventional section
+                    #old_location=job.location
+                    #job.location=Location.objects.get(name="Complete")
+                    #job.timestamp=msg.timestamp
+                    return
             elif len(JobState.objects.filter(location__exact=msg.location))>0:
                 self.zmq_out.send_json({"topic": "state/update/error", "payload": {'id':msg.job_id,'state':'error','location':msg.location.name,'message':'scan out first','timestamp':datetime.now().isoformat()}})
                 return
@@ -148,16 +150,22 @@ class StateModel:
                 old_location = job.location
                 job.location = msg.location
                 job.timestamp = msg.timestamp
-            print('===>>>',type(msg.timestamp),type(job.timestamp),type(last_ts))
+            print('===>>>',msg.timestamp,job.timestamp,last_ts)
             if last_ts and old_location and msg.timestamp>=last_ts:
-                c_td=msg.timestamp-last_ts
-                cycle_msg={
-                    'job_id':msg.job_id,
-                    'state':'complete',
-                    'cycle_time':c_td.seconds,
-                    'location':old_location.name,
-                }
-                self.zmq_out.send_json({'topic':'timing/cycletime','payload':cycle_msg})
+                if old_location.post_hold:
+                    c_td=msg.timestamp-last_ts
+                    cycle_msg={
+                        'job_id':msg.job_id,
+                        'state':'complete',
+                        'cycle_time':c_td.seconds,
+                        'location':old_location.name,
+                        "timestamp": (
+                            msg.timestamp.isoformat()
+                            if isinstance(msg.timestamp, datetime)
+                            else msg.timestamp
+                        ),
+                    }
+                    self.zmq_out.send_json({'topic':'timing/cycletime','payload':cycle_msg})
             print('saving ->',job)
             job.save()
 

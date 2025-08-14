@@ -1,6 +1,7 @@
 import paho.mqtt.client as mqtt
 import _thread as thread
 from RGB1602 import RGB1602
+from urllib.request import urlopen,Request
 import toml,logging,datetime,_thread,time,json
 
 logging.basicConfig(level=logging.INFO)
@@ -8,6 +9,7 @@ logger=logging.getLogger('Character_UI')
 
 class MqttClient:
     def __init__(self,conf,dsp=None):
+        #TODO:add code to establish state fro our location
         self.dsp=dsp
         self.conf=conf
         if not 'addr' in self.conf:
@@ -16,6 +18,7 @@ class MqttClient:
         self._cli=mqtt.Client()
         self._cli.on_connect=self.onConnect
         self._cli.on_message=self.onMessage
+        self.dsp.show('Startup\nplease wait')
     def run(self):
         self._cli.connect_async(self.conf['addr'],port=self.conf['port'])
         self._cli.loop_forever(retry_first_connection=True)
@@ -28,8 +31,29 @@ class MqttClient:
         if self.dsp:
             # this may look a little weird but we want to show the firstline after we show the secondline for 4 seeconds
             # and as the cache is emptry at this point the firstline goes first and placed in the cache before the timeout line....
-            self.dsp.show('Idle\nScan to start')
-            self.dsp.show('Connected to -\n{:^16}'.format(self.conf['addr']),timeout=10)
+            #self.dsp.show('Idle\nScan to start')
+            self.dsp.show('Connected to -\n{:^16}'.format(self.conf['addr']),timeout=2)
+            self.getCurrentState()
+    def getCurrentState(self):
+        if ' ' in self.conf['location']:
+            st_url='http://job-db.docker.local/state/location/'+self.conf['location'].replace(' ','_')
+        else:
+            st_url='http://job-db.docker.local/state/location/'+self.conf['location']
+        req=Request(st_url,headers={'accept':'application/json'})
+        while 1:
+            try:
+                resp=urlopen(req,timeout=1)
+                c_st=json.loads(resp.read())
+            except Exception as exc:
+                logger.warn(exc)
+                time.sleep(2)
+                continue
+            break
+        if len(c_st):
+            ts=datetime.datetime.fromisoformat(c_st[0]['timestamp'])
+            self.dsp.show(f"Job: {c_st[0]['id']}\nstarted {ts.hour:02d}:{ts.minute:02d}")
+        else:
+            self.dsp.show('Idle\n Scan to start')
     def onMessage(self,client,userdata,msg):
         topic=msg.topic
         msg=json.loads(msg.payload)

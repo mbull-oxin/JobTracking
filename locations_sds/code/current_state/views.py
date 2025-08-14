@@ -53,4 +53,6 @@ class StateAtLocation(viewsets.ReadOnlyModelViewSet):
     serializer_class = JobStateSerializer
 
     def get_queryset(self):
+        if '_' in self.kwargs['location']:
+            self.kwargs['location']=self.kwargs['location'].replace('_',' ')
         return JobState.objects.filter(location__name=self.kwargs["location"])
