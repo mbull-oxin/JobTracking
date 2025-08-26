@@ -31,56 +31,6 @@ services:
                     tag: docker-local-ui
             restart: unless-stopped
 
-        dashboard-ui:
-            extends:
-                file: dashboard_ui/app.yml
-                service: app
-            networks:
-                        internal:
-                                aliases:
-                                        - dashboard-ui.docker.local
-            logging:
-                    driver: syslog
-                    options:
-                            tag: docker-dashboard-ui
-            restart: unless-stopped
-            env_file:
-                - django_secret_key
-            depends_on:
-              - "job-db"
- 
-        job-db:
-            extends:
-                file: locations_sds/app.yml
-                service: app
-            networks:
-                internal:
-                    aliases:
-                        - job-db.docker.local
-            logging:
-                    driver: syslog
-                    options:
-                            tag: docker-job-db
-            restart: unless-stopped
-            env_file:
-                - django_secret_key
- 
-        user-input:
-            extends:
-                file: user_input_dc/app.yml
-                service: app
-            networks:
-                internal:
-                    aliases:
-                        - user-input.docker.local
-            logging:
-                    driver: syslog
-                    options:
-                            tag: docker-user-input
-            restart: unless-stopped
-            env_file:
-                - django_secret_key
- 
         mqtt-broker:
             extends:
                 file: mqtt_broker/app.yml
@@ -94,39 +44,6 @@ services:
                     options:
                             tag: docker-mqtt
             restart: unless-stopped
-
-        timeseries-db:
-            extends:
-                file: timeseries_sds/app.yml
-                service: db
-            networks:
-                internal:
-                    aliases:
-                        - timeseries-db.docker.local
-            logging:
-                driver: syslog
-                options:
-                    tag: docker-timeseries-db
-            restart: unless-stopped
-            depends_on:
-                - "mqtt-broker"
-        timeseries-db-input:
-            extends:
-                file: timeseries_sds/app.yml
-                service: telegraf
-            networks:
-                internal:
-                    aliases:
-                        - timeseries-input.docker.local
-            logging:
-                driver: syslog
-                options:
-                    tag: docker-timeseries-input
-            restart: unless-stopped
-            depends_on:
-                - "timeseries-db"
-                - "mqtt-broker"
-
 
 networks:
         internal:
