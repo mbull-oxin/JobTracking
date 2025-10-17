@@ -1,5 +1,5 @@
 [connection]
-addr='mqtt.docker.local'
+addr="<%= ENV["MASTER"] %>"
 port=1883
 location='Station 1'
 [display]

@@ -17,7 +17,8 @@ services:
             profiles: [slave,standalone]
             environment:
                 - USER_CONFIG_FILE=./config/config_1.toml
-       
+                - MASTER=${MASTER}
+
         character-ui:
             extends:
                 file: character_ui/app.yml
@@ -32,6 +33,8 @@ services:
                     tag: docker-local-ui
             restart: unless-stopped
             profiles: [slave,standalone]
+            environment:
+                - MASTER=${MASTER}
 
         dashboard-ui:
             extends:
@@ -68,7 +71,7 @@ services:
             profiles: [master,standalone]
             env_file:
                 - django_secret_key
- 
+
         user-input:
             extends:
                 file: user_input_dc/app.yml
@@ -85,7 +88,7 @@ services:
             profiles: [master,standalone]
             env_file:
                 - django_secret_key
- 
+
         mqtt-broker:
             extends:
                 file: mqtt_broker/app.yml
@@ -117,6 +120,7 @@ services:
             profiles: [master]
             depends_on:
                 - "mqtt-broker"
+
         timeseries-db-input:
             extends:
                 file: timeseries_sds/app.yml

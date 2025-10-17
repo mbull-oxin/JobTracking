@@ -30,7 +30,7 @@ platform = "*"
 
 
 [service_layer.mqtt]
-    broker="mqtt.docker.local"
+    broker="<%= ENV["MASTER"] %>"
     port=1883
     base_topic_template = ""
 
