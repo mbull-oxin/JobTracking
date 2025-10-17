@@ -14,25 +14,9 @@ services:
                 options:
                     tag: docker-barcode-1
             restart: unless-stopped
-            profiles: [slave,standalone]
             environment:
                 - USER_CONFIG_FILE=./config/config_1.toml
        
-        character-ui:
-            extends:
-                file: character_ui/app.yml
-                service: app
-            networks:
-                internal:
-                    aliases:
-                        - local-ui.docker.local
-            logging:
-                driver: syslog
-                options:
-                    tag: docker-local-ui
-            restart: unless-stopped
-            profiles: [slave,standalone]
-
         dashboard-ui:
             extends:
                 file: dashboard_ui/app.yml
@@ -46,7 +30,6 @@ services:
                     options:
                             tag: docker-dashboard-ui
             restart: unless-stopped
-            profiles: [master,standalone]
             env_file:
                 - django_secret_key
             depends_on:
@@ -65,7 +48,6 @@ services:
                     options:
                             tag: docker-job-db
             restart: unless-stopped
-            profiles: [master,standalone]
             env_file:
                 - django_secret_key
  
@@ -82,7 +64,6 @@ services:
                     options:
                             tag: docker-user-input
             restart: unless-stopped
-            profiles: [master,standalone]
             env_file:
                 - django_secret_key
  
@@ -99,8 +80,6 @@ services:
                     options:
                             tag: docker-mqtt
             restart: unless-stopped
-            profiles: [master,standalone]
-
         timeseries-db:
             extends:
                 file: timeseries_sds/app.yml
@@ -114,7 +93,6 @@ services:
                 options:
                     tag: docker-timeseries-db
             restart: unless-stopped
-            profiles: [master]
             depends_on:
                 - "mqtt-broker"
         timeseries-db-input:
@@ -130,7 +108,6 @@ services:
                 options:
                     tag: docker-timeseries-input
             restart: unless-stopped
-            profiles: [master]
             depends_on:
                 - "timeseries-db"
                 - "mqtt-broker"

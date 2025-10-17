@@ -35,6 +35,7 @@ class MqttClient:
             self.dsp.show('Connected to -\n{:^16}'.format(self.conf['addr']),timeout=2)
             self.getCurrentState()
     def getCurrentState(self):
+        # TODO: assemble this from hostname of master in config file
         if ' ' in self.conf['location']:
             st_url='http://job-db.docker.local/state/location/'+self.conf['location'].replace(' ','_')
         else:
